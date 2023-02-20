@@ -22,7 +22,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\DEDS-Week3-Game.csproj" />
+    <ProjectReference Include="..\Spel\DEDS-Week3-Game.csproj" />
   </ItemGroup>
 
 </Project>
