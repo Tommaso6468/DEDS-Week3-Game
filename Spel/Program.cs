@@ -9,7 +9,92 @@ public class Program
     {
         SetStartOpstelling();
         PrintBord();
+
+        var beurt = 'H';
+
+        while (!IsSpelAfgelopen())
+        {
+            Console.WriteLine("Beurt: " + beurt);
+            Console.WriteLine("Van welke positie wil je een zet doen? x,y of typ undo om de laatste zet ongedaan te maken");
+            KrijgLocatieInput(out var vanY, out var vanX);
+
+            if (vanY == -1 && vanX == -1)
+            {
+                var oudBord = stapelBord.Pak();
+                if (oudBord == default)
+                {
+                    PrintBord();
+                    Console.WriteLine("Kan niet undo doen, er is nog geen zet gedaan");
+                    continue;
+                }
+                bord = oudBord;
+                PrintBord();
+                beurt = (beurt == 'H') ? 'B' : 'H';
+                continue;
+            }
+
+            if (IsPosBuitenSpel(vanY, vanX))
+            {
+                PrintBord();
+                Console.WriteLine("Ongeldige zet");
+                continue;
+            }
+
+            Console.WriteLine("Naar welke positie wil je een zet doen? (x, y)");
+            KrijgLocatieInput(out var naarY, out var naarX);
+
+            if (DoeZet(vanY, vanX, naarY, naarX, beurt))
+            {
+                PrintBord();
+                beurt = (beurt == 'H') ? 'B' : 'H';
+            }
+            else
+            {
+                PrintBord();
+                Console.WriteLine("Ongeldige zet");
+            }
+        }
     }
+
+    private static bool KrijgLocatieInput(out int x, out int y)
+    {
+        string input = Console.ReadLine();
+
+        if (input == null)
+        {
+            Console.WriteLine("Ongeldige input");
+            x = 0;
+            y = 0;
+            return false;
+        }
+
+        if (input.ToLower() == "undo")
+        {
+            x = -1;
+            y = -1;
+            return true;
+        }
+
+        if (input == null || !input.Contains(","))
+        {
+            Console.WriteLine("Ongeldige input");
+            x = 0;
+            y = 0;
+            return false;
+        }
+
+        string[] parts = input.Split(',');
+        if (parts.Length != 2 || !int.TryParse(parts[0], out x) || !int.TryParse(parts[1], out y))
+        {
+            Console.WriteLine("Ongeldige input");
+            x = 0;
+            y = 0;
+            return false;
+        }
+
+        return true;
+    }
+
 
     public static void SetStartOpstelling()
     {
@@ -30,15 +115,12 @@ public class Program
         bord[6, 0] = 'H';
         bord[5, 1] = 'H';
         bord[6, 1] = 'H';
+
+        stapelBord.Duw((char[,])bord.Clone());
     }
 
     public static bool IsSpelAfgelopen()
     {
-        // Afgelopen als:
-        // - 1 speler geen stukken meer heeft
-        // - Beide spelers kunnen geen geldige zet doen
-        // Als afgelopen -> print winnaar en return true
-
         var aantalB = 0;
         var aantalH = 0;
 
@@ -69,7 +151,7 @@ public class Program
             Console.ForegroundColor = ConsoleColor.White;
             Console.Write(" " + i + " ");
         }
-        Console.Write("\n");
+        Console.Write("y \n");
         for (int i = 0; i < bord.GetLength(0); i++)
         {
             Console.BackgroundColor = ConsoleColor.Black;
@@ -96,80 +178,101 @@ public class Program
                     Console.Write(" H ");
                 }
             }
-            Console.BackgroundColor = default;
-            Console.ForegroundColor = default;
+            Console.BackgroundColor = ConsoleColor.Black;
+            Console.ForegroundColor = ConsoleColor.Gray;
             Console.Write("\n");
         }
+
+        Console.WriteLine("x");
     }
 
-    public static bool DoeZet(char speler, int vanX, int vanY, int naarX, int naarY)
+    public static bool DoeZet(int vanY, int vanX, int naarY, int naarX, char speler)
     {
-        // check of zet mogelijk is anders return false
-        if (IsPosBuitenSpel(vanX, vanY)) return false;
-        if (IsPosBuitenSpel(naarX, naarY)) return false;
+        if (IsPosBuitenSpel(vanY, vanX)) return false;
+        if (IsPosBuitenSpel(naarY, naarX)) return false;
 
-        if (bord[vanX, vanY] != speler) return false;
+        if (bord[vanY, vanX] != speler) return false;
+        if (bord[naarY, naarX] == speler) return false;
 
-        //check of krijgmogelijkezetten de naar zet bevat
+        var mogelijkeZetten = KrijgMogelijkeZetten(vanY, vanX);
+        if (!mogelijkeZetten.Contains(new Tuple<int, int>(naarY, naarX))) return false;
 
-        // get afstand van zet en check of dit geldig is
+        stapelBord.Duw((char[,])bord.Clone());
 
+        if (Math.Abs(naarY - vanY) <= 1 && Math.Abs(naarX - vanX) <= 1)
+        {
+            bord[naarY, naarX] = speler;
+        }
+        else
+        {
+            bord[naarY, naarX] = speler;
+            bord[vanY, vanX] = default;
+        }
 
-        // voeg bord toe aan stapel
-        stapelBord.Duw(bord);
-
-        // set bord met nieuwe zet dmv afstand van zet
-
-        // check omgeving van nieuwe locatie voor infecteren
+        for (int i = naarY - 1; i <= naarY + 1; i++)
+        {
+            for (int j = naarX - 1; j <= naarX + 1; j++)
+            {
+                if (i >= 0 && i < bord.GetLength(1) && j >= 0 && j < bord.GetLength(0))
+                {
+                    if (bord[i, j] != default && bord[i, j] != speler)
+                    {
+                        bord[i, j] = speler;
+                    }
+                }
+            }
+        }
 
         return true;
     }
 
-    public static Dictionary<int, int> KrijgMogelijkeZetten(char speler, int posX, int posY)
-    {
-        Dictionary<int, int> mogelijkeZetten = new Dictionary<int, int>();
 
-        if (IsPosBuitenSpel(posX, posY)) return mogelijkeZetten;
+
+    public static List<Tuple<int, int>> KrijgMogelijkeZetten(int posY, int posX)
+    {
+        List<Tuple<int, int>> mogelijkeZetten = new List<Tuple<int, int>>();
+
+        var speler = bord[posY, posX];
+
+        if (IsPosBuitenSpel(posY, posX)) return mogelijkeZetten;
 
         // 1 ver
 
         //links
-        if (posX - 1 >= 0 && bord[posX - 1, posY] != speler) mogelijkeZetten.Add(posX - 1, posY);
+        if (posY - 1 >= 0 && bord[posY - 1, posX] != speler) mogelijkeZetten.Add(Tuple.Create(posY - 1, posX));
         //rechts
-        if (posX + 1 < bord.GetLength(1) && bord[posX + 1, posY] != speler) mogelijkeZetten.Add(posX + 1, posY);     
+        if (posY + 1 < bord.GetLength(1) && bord[posY + 1, posX] != speler) mogelijkeZetten.Add(Tuple.Create(posY + 1, posX));
         //boven
-        if (posY - 1 >= 0 && bord[posX, posY - 1] != speler) mogelijkeZetten.Add(posX, posY - 1);      
+        if (posX - 1 >= 0 && bord[posY, posX - 1] != speler) mogelijkeZetten.Add(Tuple.Create(posY, posX - 1));
         //onder
-        if (posY + 1 <= bord.GetLength(0) && bord[posX, posY + 1] != speler) mogelijkeZetten.Add(posX, posY + 1);
+        if (posX + 1 < bord.GetLength(0) && bord[posY, posX + 1] != speler) mogelijkeZetten.Add(Tuple.Create(posY, posX + 1));
         //linksboven
-        if (posX - 1 >= 0 && posY - 1 >= 0 && bord[posX - 1, posY - 1] != speler) mogelijkeZetten.Add(posX - 1, posY - 1);
+        if (posY - 1 >= 0 && posX - 1 >= 0 && bord[posY - 1, posX - 1] != speler) mogelijkeZetten.Add(Tuple.Create(posY - 1, posX - 1));
         //linksonder
-        if (posX - 1 >= 0 && posY + 1 < bord.GetLength(0) && bord[posX - 1, posY + 1] != speler) mogelijkeZetten.Add(posX - 1, posY + 1);
+        if (posY - 1 >= 0 && posX + 1 < bord.GetLength(0) && bord[posY - 1, posX + 1] != speler) mogelijkeZetten.Add(Tuple.Create(posY - 1, posX + 1));
         //rechtsboven
-        if (posX + 1 < bord.GetLength(1) && posY - 1 >= 0 && bord[posX + 1, posY - 1] != speler) mogelijkeZetten.Add(posX + 1, posY - 1);
+        if (posY + 1 < bord.GetLength(1) && posX - 1 >= 0 && bord[posY + 1, posX - 1] != speler) mogelijkeZetten.Add(Tuple.Create(posY + 1, posX - 1));
         //rechtsonder
-        if (posX + 1 < bord.GetLength(1) && posY + 1 < bord.GetLength(0) && bord[posX + 1, posY + 1] != speler) mogelijkeZetten.Add(posX + 1, posY + 1);
-        
+        if (posY + 1 < bord.GetLength(1) && posX + 1 < bord.GetLength(0) && bord[posY + 1, posX + 1] != speler) mogelijkeZetten.Add(Tuple.Create(posY + 1, posX + 1));
 
         // 2 ver
 
         //boven
-        if (posY - 2 >= 0 && bord[posX, posY - 2] != speler) mogelijkeZetten.Add(posX, posY - 2);
+        if (posX - 2 >= 0 && bord[posY, posX - 2] != speler) mogelijkeZetten.Add(Tuple.Create(posY, posX - 2));
         //onder
-        if (posY + 2 < bord.GetLength(0) && bord[posX, posY + 2] != speler) mogelijkeZetten.Add(posX, posY + 2);
+        if (posX + 2 < bord.GetLength(0) && bord[posY, posX + 2] != speler) mogelijkeZetten.Add(Tuple.Create(posY, posX + 2));
         //links
-        if (posX - 2 >= 0 && bord[posX - 2, posY] != speler) mogelijkeZetten.Add(posX - 2, posY);
+        if (posY - 2 >= 0 && bord[posY - 2, posX] != speler) mogelijkeZetten.Add(Tuple.Create(posY - 2, posX));
         //rechts
-        if (posX + 2 < bord.GetLength(1) && bord[posX + 2, posY] != speler) mogelijkeZetten.Add(posX + 2, posY);
-        
+        if (posY + 2 < bord.GetLength(1) && bord[posY + 2, posX] != speler) mogelijkeZetten.Add(Tuple.Create(posY + 2, posX));
 
         return mogelijkeZetten;
     }
 
-    public static bool IsPosBuitenSpel(int posX, int posY)
+    public static bool IsPosBuitenSpel(int posY, int posX)
     {
-        if (posX < 0 || posX > 6) return true;
         if (posY < 0 || posY > 6) return true;
+        if (posX < 0 || posX > 6) return true;
         return false;
     }
 }
