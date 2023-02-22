@@ -11,7 +11,7 @@ public class StapelTests
         var stapel = new Stapel<int>();
         var cijfer = 1;
 
-        stapel.Duw(ref cijfer);
+        stapel.Duw(cijfer);
         var resultaatPak = stapel.Pak();
 
         Assert.Equal(resultaatPak, cijfer);
@@ -27,9 +27,9 @@ public class StapelTests
         verwachtResultaat.Add(strings[1]);
         verwachtResultaat.Add(strings[0]);
 
-        stapel.Duw(ref strings[0]);
-        stapel.Duw(ref strings[1]);
-        stapel.Duw(ref strings[2]);
+        stapel.Duw(strings[0]);
+        stapel.Duw(strings[1]);
+        stapel.Duw(strings[2]);
 
         var resultaatPak = new List<string>();
         resultaatPak.Add(stapel.Pak());

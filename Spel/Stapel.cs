@@ -4,7 +4,7 @@ public class Stapel<T>
 {
     private DataFragment<T>? top;
 
-    public void Duw(ref T waarde)
+    public void Duw(T waarde)
     {
         top = new DataFragment<T> { data = waarde, volgende = top };
     }
