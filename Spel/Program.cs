@@ -51,7 +51,7 @@ public class Program
                         var waarde = bord[i, j];
                         if (waarde == 'B')
                         {
-
+                            eigenPosities.Add(new Tuple<int, int>(i, j));
                         }
                     }
                 }
@@ -60,6 +60,7 @@ public class Program
 
                 foreach (var eigenPositie in eigenPosities)
                 {
+
                     var mogelijkeZettenVoorPositie = KrijgMogelijkeZetten(eigenPositie.Item1, eigenPositie.Item2);
                     foreach (var mogelijkeZet in mogelijkeZettenVoorPositie)
                     {
