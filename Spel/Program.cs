@@ -26,7 +26,7 @@ public class Program
             {
                 SpelTegenComputer();
                 break;
-            }     
+            }
         }
     }
 
@@ -42,7 +42,66 @@ public class Program
             {
                 Console.WriteLine($"Beurt: {beurt} (computer)");
 
+                List<Tuple<int, int>> eigenPosities = new List<Tuple<int, int>>();
 
+                for (int i = 0; i < bord.GetLength(0); i++)
+                {
+                    for (int j = 0; j < bord.GetLength(1); j++)
+                    {
+                        var waarde = bord[i, j];
+                        if (waarde == 'B')
+                        {
+
+                        }
+                    }
+                }
+
+                Tuple<int, int, int, int, int> besteZet = null;
+
+                foreach (var eigenPositie in eigenPosities)
+                {
+                    var mogelijkeZettenVoorPositie = KrijgMogelijkeZetten(eigenPositie.Item1, eigenPositie.Item2);
+                    foreach (var mogelijkeZet in mogelijkeZettenVoorPositie)
+                    {
+                        int aantalMogelijkeInfecties = 0;
+                        for (int i = -1; i <= 1; i++)
+                        {
+                            for (int j = -1; j <= 1; j++)
+                            {
+                                if (i == 0 && j == 0) continue;
+                                if (IsPosBuitenSpel(mogelijkeZet.Item1 + i, mogelijkeZet.Item2 + j)) continue;
+                                if (bord[mogelijkeZet.Item1 + i, mogelijkeZet.Item2 + j] == 'H')
+                                {
+                                    aantalMogelijkeInfecties++;
+                                }
+                            }
+                        }
+
+                        if (besteZet == null || aantalMogelijkeInfecties > besteZet.Item5)
+                        {
+                            besteZet = new Tuple<int, int, int, int, int>(eigenPositie.Item1, eigenPositie.Item2, mogelijkeZet.Item1, mogelijkeZet.Item2, aantalMogelijkeInfecties);
+                        }
+                    }
+                }
+
+                if (besteZet == null)
+                {
+                    Console.WriteLine("Kan geen zet doen");
+                    beurt = (beurt == 'H') ? 'B' : 'H';
+                    continue;
+                }
+
+                if (DoeZet(besteZet.Item1, besteZet.Item2, besteZet.Item3, besteZet.Item4, beurt))
+                {
+                    PrintBord();
+                }
+                else
+                {
+                    PrintBord();
+                    Console.WriteLine("Ongeldige zet");
+                    beurt = (beurt == 'H') ? 'B' : 'H';
+                    continue;
+                }
 
                 beurt = (beurt == 'H') ? 'B' : 'H';
                 continue;
