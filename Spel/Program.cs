@@ -7,53 +7,105 @@ public class Program
 
     public static void Main(string[] args)
     {
+        while (true)
+        {
+            Console.WriteLine("(1) Tegen andere speler \n(2) Tegen computer");
+            var input = Console.ReadLine();
+            Console.WriteLine(input);
+            if (input == null)
+            {
+                Console.WriteLine("Ongeldige input");
+                continue;
+            }
+            if (input.Equals("1"))
+            {
+                SpelTegenSpeler();
+                break;
+            }
+            if (input.Equals("2"))
+            {
+                SpelTegenComputer();
+                break;
+            }     
+        }
+    }
+
+    private static void SpelTegenComputer()
+    {
         SetStartOpstelling();
         PrintBord();
 
         var beurt = 'H';
-
         while (!IsSpelAfgelopen())
         {
-            Console.WriteLine("Beurt: " + beurt);
-            Console.WriteLine("Van welke positie wil je een zet doen? x,y of typ undo om de laatste zet ongedaan te maken");
-            KrijgLocatieInput(out var vanY, out var vanX);
-
-            if (vanY == -1 && vanX == -1)
+            if (beurt == 'B')
             {
-                var oudBord = stapelBord.Pak();
-                if (oudBord == default)
-                {
-                    PrintBord();
-                    Console.WriteLine("Kan niet undo doen, er is nog geen zet gedaan");
-                    continue;
-                }
-                bord = oudBord;
-                PrintBord();
+                Console.WriteLine($"Beurt: {beurt} (computer)");
+
+
+
                 beurt = (beurt == 'H') ? 'B' : 'H';
                 continue;
             }
 
-            if (IsPosBuitenSpel(vanY, vanX))
-            {
-                PrintBord();
-                Console.WriteLine("Ongeldige zet");
-                continue;
-            }
-
-            Console.WriteLine("Naar welke positie wil je een zet doen? (x, y)");
-            KrijgLocatieInput(out var naarY, out var naarX);
-
-            if (DoeZet(vanY, vanX, naarY, naarX, beurt))
-            {
-                PrintBord();
-                beurt = (beurt == 'H') ? 'B' : 'H';
-            }
-            else
-            {
-                PrintBord();
-                Console.WriteLine("Ongeldige zet");
-            }
+            if (DoeSpelerBeurt(beurt)) beurt = (beurt == 'H') ? 'B' : 'H';
         }
+    }
+
+    private static void SpelTegenSpeler()
+    {
+        SetStartOpstelling();
+        PrintBord();
+
+        var beurt = 'H';
+        while (!IsSpelAfgelopen())
+        {
+            if (DoeSpelerBeurt(beurt)) beurt = (beurt == 'H') ? 'B' : 'H';
+        }
+    }
+
+    private static bool DoeSpelerBeurt(char beurt)
+    {
+        Console.WriteLine($"Beurt: {beurt}");
+        Console.WriteLine("Van welke positie wil je een zet doen? x,y of typ undo om de laatste zet ongedaan te maken");
+        KrijgLocatieInput(out var vanY, out var vanX);
+
+        if (vanY == -1 && vanX == -1)
+        {
+            var oudBord = stapelBord.Pak();
+            if (oudBord == default)
+            {
+                PrintBord();
+                Console.WriteLine("Kan niet undo doen, er is nog geen zet gedaan");
+                return false;
+            }
+            bord = oudBord;
+            PrintBord();
+            beurt = (beurt == 'H') ? 'B' : 'H';
+            return false;
+        }
+
+        if (IsPosBuitenSpel(vanY, vanX))
+        {
+            PrintBord();
+            Console.WriteLine("Ongeldige zet");
+            return false;
+        }
+
+        Console.WriteLine("Naar welke positie wil je een zet doen? (x, y)");
+        KrijgLocatieInput(out var naarY, out var naarX);
+
+        if (DoeZet(vanY, vanX, naarY, naarX, beurt))
+        {
+            PrintBord();
+        }
+        else
+        {
+            PrintBord();
+            Console.WriteLine("Ongeldige zet");
+            return false;
+        }
+        return true;
     }
 
     private static bool KrijgLocatieInput(out int x, out int y)
@@ -84,7 +136,7 @@ public class Program
         }
 
         string[] parts = input.Split(',');
-        if (parts.Length != 2 || !int.TryParse(parts[0], out x) || !int.TryParse(parts[1], out y))
+        if (parts.Length != 2 || !int.TryParse(parts[0], out y) || !int.TryParse(parts[1], out x))
         {
             Console.WriteLine("Ongeldige input");
             x = 0;
@@ -151,7 +203,7 @@ public class Program
             Console.ForegroundColor = ConsoleColor.White;
             Console.Write(" " + i + " ");
         }
-        Console.Write("y \n");
+        Console.Write("x \n");
         for (int i = 0; i < bord.GetLength(0); i++)
         {
             Console.BackgroundColor = ConsoleColor.Black;
@@ -183,7 +235,7 @@ public class Program
             Console.Write("\n");
         }
 
-        Console.WriteLine("x");
+        Console.WriteLine("y");
     }
 
     public static bool DoeZet(int vanY, int vanX, int naarY, int naarX, char speler)
