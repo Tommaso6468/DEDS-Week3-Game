@@ -351,35 +351,19 @@ public class Program
 
         if (IsPosBuitenSpel(posY, posX)) return mogelijkeZetten;
 
-        // 1 ver
-
-        //links
-        if (posY - 1 >= 0 && bord[posY - 1, posX] != beurt) mogelijkeZetten.Add(Tuple.Create(posY - 1, posX));
-        //rechts
-        if (posY + 1 < bord.GetLength(1) && bord[posY + 1, posX] != beurt) mogelijkeZetten.Add(Tuple.Create(posY + 1, posX));
-        //boven
-        if (posX - 1 >= 0 && bord[posY, posX - 1] != beurt) mogelijkeZetten.Add(Tuple.Create(posY, posX - 1));
-        //onder
-        if (posX + 1 < bord.GetLength(0) && bord[posY, posX + 1] != beurt) mogelijkeZetten.Add(Tuple.Create(posY, posX + 1));
-        //linksboven
-        if (posY - 1 >= 0 && posX - 1 >= 0 && bord[posY - 1, posX - 1] != beurt) mogelijkeZetten.Add(Tuple.Create(posY - 1, posX - 1));
-        //linksonder
-        if (posY - 1 >= 0 && posX + 1 < bord.GetLength(0) && bord[posY - 1, posX + 1] != beurt) mogelijkeZetten.Add(Tuple.Create(posY - 1, posX + 1));
-        //rechtsboven
-        if (posY + 1 < bord.GetLength(1) && posX - 1 >= 0 && bord[posY + 1, posX - 1] != beurt) mogelijkeZetten.Add(Tuple.Create(posY + 1, posX - 1));
-        //rechtsonder
-        if (posY + 1 < bord.GetLength(1) && posX + 1 < bord.GetLength(0) && bord[posY + 1, posX + 1] != beurt) mogelijkeZetten.Add(Tuple.Create(posY + 1, posX + 1));
-
-        // 2 ver
-
-        //boven
-        if (posX - 2 >= 0 && bord[posY, posX - 2] != beurt) mogelijkeZetten.Add(Tuple.Create(posY, posX - 2));
-        //onder
-        if (posX + 2 < bord.GetLength(0) && bord[posY, posX + 2] != beurt) mogelijkeZetten.Add(Tuple.Create(posY, posX + 2));
-        //links
-        if (posY - 2 >= 0 && bord[posY - 2, posX] != beurt) mogelijkeZetten.Add(Tuple.Create(posY - 2, posX));
-        //rechts
-        if (posY + 2 < bord.GetLength(1) && bord[posY + 2, posX] != beurt) mogelijkeZetten.Add(Tuple.Create(posY + 2, posX));
+        for (int i = posY - 2; i <= posY + 2; i++)
+        {
+            for (int j = posX - 2; j <= posX + 2; j++)
+            {
+                if (i >= 0 && i < bord.GetLength(1) && j >= 0 && j < bord.GetLength(0))
+                {
+                    if (bord[i, j] == default)
+                    {
+                        mogelijkeZetten.Add(new Tuple<int, int>(i, j));
+                    }
+                }
+            }
+        }
 
         return mogelijkeZetten;
     }
